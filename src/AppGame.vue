@@ -14,10 +14,9 @@
   <p>
     interaction avec le contract Treasury
   </p>
-  <input type="number" placeholder="montant" v-mondel="amount" />
-  <button @click="deposit">Deposit</button>
-  <button @click="withdraw(amount)">Withdraw</button>
-
+  <input type="number" placeholder="montant" v-model="amount" />
+  <button @click="treasury.deposit(amount)">Deposit</button>
+  <button @click="treasury.withdraw(amount)">Withdraw</button>
 </template>
 
 <script setup>
@@ -31,8 +30,8 @@ const treasury = storeTreasury()
 
 const isConnected = ref('false')
 const address = ref('rien')
-const mintTo=ref('0x70997970C51812dc3A010C7d01b50e0d17dc79C8')
-const amount = ref(300)
+const mintTo = ref('0x70997970C51812dc3A010C7d01b50e0d17dc79C8')
+const amount = ref()
 
 
 function connectionWallet() {
@@ -47,28 +46,28 @@ function connectionWallet() {
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 
-async function ConnectionToken(){
+async function ConnectionToken() {
   const provider = new ethers.providers.Web3Provider(ethereum)
   const signer = provider.getSigner()
-  const xenosContract =  new ethers.Contract(xenosToken.tokenAddress, xenosToken.abiXenos, signer)
+  const xenosContract = new ethers.Contract(xenosToken.tokenAddress, xenosToken.abiXenos, signer)
   return xenosContract
 }
 
-async function MintToken(_to){
-  const xenosContract= await ConnectionToken()
-  const tx = await xenosContract.mint(_to,ethers.utils.parseEther('1000'))
+async function MintToken(_to) {
+  const xenosContract = await ConnectionToken()
+  const tx = await xenosContract.mint(_to, ethers.utils.parseEther('1000'))
 
   console.log(tx);
 }
 
-async function approve1000(){
-  const xenosContract= await ConnectionToken()
+async function approve1000() {
+  const xenosContract = await ConnectionToken()
   const tx = await xenosContract.approve(treasury.treasuryAddress, ethers.utils.parseEther('1000'))
 
-  const EmitApproval = xenosContract.once('Approval',(owner, spender,value,event) => {
+  const EmitApproval = xenosContract.once('Approval', (owner, spender, value, event) => {
     let recap = {
-      value:ethers.utils.formatEther(ethers.BigNumber.from(value._hex)),
-      data:event
+      value: ethers.utils.formatEther(ethers.BigNumber.from(value._hex)),
+      data: event
     }
     console.log(recap)
     return recap
@@ -77,53 +76,16 @@ async function approve1000(){
   console.log(EmitApproval)
 }
 
-async function getBalanceOf(){
-  const xenosContract= await ConnectionToken()
-  const balance  = await xenosContract.balanceOf(address.value)
-  console.log(ethers.utils.formatEther(balance),'XDP');
+async function getBalanceOf() {
+  const xenosContract = await ConnectionToken()
+  const balance = await xenosContract.balanceOf(address.value)
+  console.log(ethers.utils.formatEther(balance), 'XDP');
 }
 
-async function getBalanceOfContract(){
-  const xenosContract= await ConnectionToken()
-  const balance  = await xenosContract.balanceOf(treasury.treasuryAddress)
-  console.log(ethers.utils.formatEther(balance),'XDP');
-}
-// --------------------------------------------------------------------------------------------------------------------------------------------------
-
-async function ConnectionTreasury(){
-  const provider = new ethers.providers.Web3Provider(ethereum)
-  const signer = provider.getSigner()
-  const treasuryContract =  new ethers.Contract(treasury.treasuryAddress, treasury.abitreasury, signer)
-  return treasuryContract
-}
-
-async function deposit(){
-  const treasuryContract = await ConnectionTreasury()
-  await treasuryContract.depositTokens(200)
-
-  treasuryContract.on('Deposit',(value,event) =>{
-    let recap = {
-      value:ethers.utils.formatEther(ethers.BigNumber.from(value._hex)),
-      data:event
-    }
-    console.log(recap)
-  })
-
-}
-
-async function withdraw(_amount){
-  console.log(_amount);
-  const treasuryContract = await ConnectionTreasury()
-  const tx  = treasuryContract.withdrawTokens(_amount)
-
-  treasuryContract.on('Withdraw',(value,event) =>{
-    let recap = {
-      value:ethers.utils.formatEther(ethers.BigNumber.from(value._hex)),
-      data:event
-    }
-    console.log(recap)
-  })
-
+async function getBalanceOfContract() {
+  const xenosContract = await ConnectionToken()
+  const balance = await xenosContract.balanceOf(treasury.treasuryAddress)
+  console.log(ethers.utils.formatEther(balance), 'XDP');
 }
 
 
