@@ -62,7 +62,9 @@ async function MintToken(_to) {
 
 async function approve1000() {
   const xenosContract = await ConnectionToken()
-  const tx = await xenosContract.approve(treasury.treasuryAddress, ethers.utils.parseEther('1000'))
+  const totalSupply= await xenosContract.totalSupply()
+  console.log(totalSupply)
+  const tx = await xenosContract.approve(treasury.treasuryAddress, ethers.utils.parseEther('100'))
 
   const EmitApproval = xenosContract.once('Approval', (owner, spender, value, event) => {
     let recap = {

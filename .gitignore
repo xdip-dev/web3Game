@@ -1,6 +1,11 @@
 cache/
 artifacts/
 
+.secret
+.alchemyURL
+scanNetwork.json
+contract_deployed_mumbai
+
 # Logs
 logs
 *.log
