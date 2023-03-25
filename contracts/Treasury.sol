@@ -6,6 +6,7 @@ import "./IERC20.sol"; // import ERC20 token contract interface
 contract Treasury {
     IERC20 public token; // declare public variable for ERC20 token contract interface
     uint256 _amount;
+    mapping(address => uint256) private balancesInGame;
 
     event Deposit(uint256 value);
     event Withdraw(uint256 value);
@@ -33,4 +34,6 @@ contract Treasury {
         emit Withdraw(_amount);
         // withdraw tokens from the game contract
     }
+
+    
 }
