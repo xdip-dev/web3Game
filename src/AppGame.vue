@@ -49,7 +49,6 @@ function connectionWallet() {
     console.log('MetaMask is installed!');
     ethereum.request({ method: 'eth_requestAccounts' }).then(event => address.value = event[0])
     isConnected.value = ethereum.isConnected()
-    getBalanceOf()
   }
 }
 
