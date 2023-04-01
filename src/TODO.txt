@@ -1,0 +1,6 @@
+1 button connectionWallet
+1 button claim pressable only if connected
+1 button mint 20 free tokens (optional)
+3 cards to select with picture inside
+1 button play with 1 token
+1 affichage next war

@@ -40,38 +40,52 @@ describe("Token contract", function () {
       await xenostoken.connect(ownerToken).mint(signers[2].address, ethers.utils.parseEther('100'));
       await xenostoken.connect(ownerToken).mint(signers[3].address, ethers.utils.parseEther('100'));
       await xenostoken.connect(ownerToken).mint(signers[4].address, ethers.utils.parseEther('100'));
+      await xenostoken.connect(ownerToken).mint(signers[5].address, ethers.utils.parseEther('100'));
+      await xenostoken.connect(ownerToken).mint(signers[6].address, ethers.utils.parseEther('100'));
 
       await xenostoken.connect(signers[0]).approve(treasury.address, ethers.utils.parseEther('100'));
       await xenostoken.connect(signers[1]).approve(treasury.address, ethers.utils.parseEther('100'));
       await xenostoken.connect(signers[2]).approve(treasury.address, ethers.utils.parseEther('100'));
       await xenostoken.connect(signers[3]).approve(treasury.address, ethers.utils.parseEther('100'));
       await xenostoken.connect(signers[4]).approve(treasury.address, ethers.utils.parseEther('100'));
+      await xenostoken.connect(signers[5]).approve(treasury.address, ethers.utils.parseEther('100'));
+      await xenostoken.connect(signers[6]).approve(treasury.address, ethers.utils.parseEther('100'));
+
+      //team 2 (winners)
+      await treasury.connect(signers[0]).depositTokens(ethers.utils.parseEther('1'), 2)
+      await treasury.connect(signers[1]).depositTokens(ethers.utils.parseEther('1'), 2)
+      await treasury.connect(signers[2]).depositTokens(ethers.utils.parseEther('1'), 2)
+
+      //team 1
+      await treasury.connect(signers[3]).depositTokens(ethers.utils.parseEther('1'), 1)
+
+      //team 3 
+      await treasury.connect(signers[4]).depositTokens(ethers.utils.parseEther('1'), 3);
 
 
       return { treasury, signers, xenostoken, ownerToken };
     }
+
     describe('Deposite Logic', () => {
 
       it('should bet only 1 token', async function () {
         const { treasury } = await loadFixture(deployTreasuryFixture)
-        await expect(treasury.depositTokens(2, 1)).to.be.revertedWith("please Bet only 1 token")
+        await expect(treasury.depositTokens(ethers.utils.parseEther('2'), 1)).to.be.revertedWith("please Bet only 1 token")
+        await expect(treasury.depositTokens(ethers.utils.parseEther('1'), 1)).to.not.be.revertedWith("please Bet only 1 token")
 
       })
 
       it('should place a player into a team when betting 1 token', async function () {
         const { treasury, signers } = await loadFixture(deployTreasuryFixture)
 
-        await treasury.connect(signers[0]).depositTokens(1, 2)
-        await treasury.connect(signers[1]).depositTokens(1, 2)
-        await treasury.connect(signers[2]).depositTokens(1, 3)
-
         const expectedAddressesTeam2 = [
           signers[0].address,
           signers[1].address,
+          signers[2].address,
         ];
 
         const expectedAddressesTeam3 = [
-          signers[2].address,
+          signers[4].address,
         ];
 
         expect(await treasury.readMapping(2)).to.have.members(expectedAddressesTeam2)
@@ -84,11 +98,24 @@ describe("Token contract", function () {
 
         const { treasury, signers } = await loadFixture(deployTreasuryFixture)
 
-        await treasury.connect(signers[0]).depositTokens(1, 2);
-        await treasury.connect(signers[1]).depositTokens(1, 1);
-
-        expect(await treasury.getBalancePool()).to.be.equal(ethers.utils.parseEther('2'))
+        expect(await treasury.getBalancePool()).to.be.equal(ethers.utils.parseEther('5'))
       })
+
+      it('should play only once per game', async () => {
+        const { treasury, signers } = await loadFixture(deployTreasuryFixture)
+
+        for (let i = 0; i <= 4; i++){
+          expect(await treasury.checkPlayerPlayed(signers[i].address)).to.be.equal(true)
+        }
+        
+        await treasury.playRound()
+
+        for (let i = 0; i <= 4; i++){
+          expect(await treasury.checkPlayerPlayed(signers[i].address)).to.be.equal(false)
+        }
+
+      }
+      )
 
     })
 
@@ -96,18 +123,9 @@ describe("Token contract", function () {
       it('should calculate the winning per winner (pool balance)/(team size)', async function () {
         const { treasury, signers } = await loadFixture(deployTreasuryFixture)
         const winningTeam = 2
-        //team 2
-        await treasury.connect(signers[0]).depositTokens(1, 2)
-        await treasury.connect(signers[1]).depositTokens(1, 2)
-        await treasury.connect(signers[2]).depositTokens(1, 2)
-        await treasury.connect(signers[4]).depositTokens(1, 2)
-
-        //team 1
-        await treasury.connect(signers[3]).depositTokens(1, 1)
-
 
         const bigNumberDeposit = ethers.BigNumber.from(ethers.utils.parseEther("5"))
-        const expectedResult = bigNumberDeposit.div(4)
+        const expectedResult = bigNumberDeposit.div(3)
 
         const calculus = await treasury.calculateRewardsOfTheRound(winningTeam)
 
@@ -119,18 +137,7 @@ describe("Token contract", function () {
         const { treasury, signers } = await loadFixture(deployTreasuryFixture)
         const winningTeam = 2
 
-        //team 2 (winners)
-        await treasury.connect(signers[0]).depositTokens(1, 2)
-        await treasury.connect(signers[1]).depositTokens(1, 2)
-        await treasury.connect(signers[2]).depositTokens(1, 2)
-
-        //team 1
-        await treasury.connect(signers[3]).depositTokens(1, 1)
-
-        //team 3 
-        await treasury.connect(signers[4]).depositTokens(1, 3)
-
-        await treasury.addAllowanceWinners(winningTeam)
+        await treasury.playRound()
 
         const bigNumberDeposit = ethers.BigNumber.from(ethers.utils.parseEther("5"))
         const expectedResult = bigNumberDeposit.div(3)
@@ -152,18 +159,7 @@ describe("Token contract", function () {
         const { treasury, signers } = await loadFixture(deployTreasuryFixture)
         const winningTeam = 2
 
-        //team 2 (winners)
-        await treasury.connect(signers[0]).depositTokens(1, 2)
-        await treasury.connect(signers[1]).depositTokens(1, 2)
-        await treasury.connect(signers[2]).depositTokens(1, 2)
-
-        //team 1
-        await treasury.connect(signers[3]).depositTokens(1, 1)
-
-        //team 3 
-        await treasury.connect(signers[4]).depositTokens(1, 3)
-
-        await treasury.addAllowanceWinners(winningTeam)
+        await treasury.playRound()
  
         await expect(treasury.connect(signers[6]).withdrawTokens()).to.be.revertedWith("not enough allowance")
         
@@ -177,16 +173,29 @@ describe("Token contract", function () {
 
     describe('Game Feature', () =>{
 
+      
       it('shoould control the ownership of onlyOwner function', async () => {
         const { treasury, signers } = await loadFixture(deployTreasuryFixture)
 
-        await expect(treasury.connect(signers[1]).addAllowanceWinners(2)).to.be.rejectedWith('Ownable: caller is not the owner')
+        await expect(treasury.connect(signers[1]).playRound()).to.be.rejectedWith('Ownable: caller is not the owner')
 
       })
 
       it('should trigger the contract at a specific time')
 
-      it('it should set back the team to empty array after the round')
+      it('should trigger only with a minimum of player')
+
+      it('it should set back the team to empty array after the round',async () => {
+        const { treasury } = await loadFixture(deployTreasuryFixture)
+
+        await treasury.playRound();
+
+        expect(await treasury.readMapping(1)).to.have.members([])
+        expect(await treasury.readMapping(2)).to.have.members([])
+        expect(await treasury.readMapping(3)).to.have.members([])   
+
+      })
+
 
     })
 

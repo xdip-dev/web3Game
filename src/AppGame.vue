@@ -1,57 +1,48 @@
 
 <template>
-  <div class="block">
-    <button @click="connectionWallet">Connect Wallet</button>
-    <button @click="xenosToken.getBalanceOf(address)">Balance XDP</button>
-    <button @click="xenosToken.getBalanceOf(treasury.treasuryAddress)">Balance Contract XDP</button>
-    <p>
-      who's connected :
-      {{ isConnected }}
-      {{ address }}
+  Welcome {{ addressConnected }} and your {{ balanceOfToken }} XDP
+  <button @click="connectionWallet">Connect Wallet</button>
+
+  <button :disabled="addressConnected === '' ? true : false">Claim Rewards</button>
+  <button :disabled="addressConnected === '' ? true : false" @click="joinAnArmy">
+    Join the Army
+  </button>
+
+    <p> Verif
+      <button :disabled="addressConnected === '' ? true : false" @click="contracts.checkAllowence(
+    addressConnected,
+    contracts.treasuryAddress
+  )">
+    check allowance
+  </button>
+  <button :disabled="addressConnected === '' ? true : false" @click="contracts.getBalancePool">Balance Pool</button>
     </p>
-  </div>
-  <div class="block">
-    <div class="block_input">
-      <input type="text" placeholder="to" v-model="mintTo" />
-      <input type="text" placeholder="amount to mint/approve" v-model="amount_mintApprove" />
-    </div>
-    <button @click="xenosToken.MintToken(mintTo,amount_mintApprove)">Mint token (only owner)</button>
-    <button @click="xenosToken.approve(amount_mintApprove)">approve the amount selected</button>
-  </div>
-  <div class="block">
-    <p>
-      interaction avec le contract Treasury
-    </p>
-    <div class="block_input">
-      <input type="number" placeholder="montant" v-model="amount" />
-    </div>
-    <button @click="treasury.deposit(amount)">Deposit</button>
-    <button @click="treasury.withdraw(amount)">Withdraw</button>
-  </div>
+  
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { storeTreasury, storeXenos } from './store/contractsCall'
+import { storeContractInteractions } from './store/contractsCall'
 
-const xenosToken = storeXenos()
-const treasury = storeTreasury()
+const contracts = storeContractInteractions()
 
-const isConnected = ref('false')
-const address = ref('rien')
-const mintTo = ref('')
-const amount_mintApprove = ref(0)
-const amount = ref(0)
+const addressConnected = ref('')
+const balanceOfToken = ref('...')
 
 
-function connectionWallet() {
+async function connectionWallet() {
   if (typeof window.ethereum !== 'undefined') {
     console.log('MetaMask is installed!');
-    ethereum.request({ method: 'eth_requestAccounts' }).then(event => address.value = event[0])
-    isConnected.value = ethereum.isConnected()
+    const account = await ethereum.request({ method: 'eth_requestAccounts' })
+    addressConnected.value = account[0]
+    balanceOfToken.value = await contracts.getBalanceOf(account[0])
   }
 }
 
+async function joinAnArmy(){
+  const txSendToken = await contracts.sendTokens(1)
+  console.log(txSendToken);
+}
 
 </script>
 

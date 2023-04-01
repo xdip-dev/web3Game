@@ -10,6 +10,8 @@ contract Treasury is Ownable {
 
     uint256 private balancePool;
 
+    address[] public playerPlayed;
+
     mapping(uint8 => address[]) public teamMapping;
 
     mapping(address => uint256) private playerAllowenceWithdraw;
@@ -22,31 +24,39 @@ contract Treasury is Ownable {
     }
 
     function depositTokens(uint256 amount, uint8 teamNumber) public {
-        require(amount * 1 ether == 1 ether, "please Bet only 1 token");
+        require(amount == 1 ether, "please Bet only 1 token");
 
         require(
-            token.allowance(msg.sender, address(this)) >= amount * 1 ether,
+            token.allowance(msg.sender, address(this)) >= amount,
             "You must approve tokens first"
         );
         require(
-            token.transferFrom(msg.sender, address(this), amount * 1 ether),
+            token.transferFrom(msg.sender, address(this), amount),
             "Token transfer failed"
         );
 
-        balancePool += amount * 1 ether;
-        assignTeamMember(teamNumber, msg.sender);
+        require(
+            !checkPlayerPlayed(msg.sender),
+            "You already played for this round"
+        );
 
-        emit Deposit(amount * 1 ether);
+        balancePool += amount;
+        assignTeamMember(teamNumber, msg.sender);
+        playerPlayed.push(msg.sender);
+
+        emit Deposit(amount);
     }
 
     function withdrawTokens() public {
-        require(playerAllowenceWithdraw[msg.sender] > 0, "not enough allowance");
+        require(
+            playerAllowenceWithdraw[msg.sender] > 0,
+            "not enough allowance"
+        );
         uint256 amountToTransfert = playerAllowenceWithdraw[msg.sender];
 
         playerAllowenceWithdraw[msg.sender] = 0;
 
-        token.transfer(msg.sender,amountToTransfert);
-
+        token.transfer(msg.sender, amountToTransfert);
     }
 
     function assignTeamMember(uint8 teamNumber, address addressPlayer) private {
@@ -75,7 +85,7 @@ contract Treasury is Ownable {
         return getBalancePool() / getSizeArray(readMapping(winningTeam));
     }
 
-    function addAllowanceWinners(uint8 winningTeam) public onlyOwner {
+    function addAllowanceWinners(uint8 winningTeam) private {
         address[] memory winners = readMapping(winningTeam);
         uint winningArraySize = getSizeArray(winners);
         uint reward = calculateRewardsOfTheRound(winningTeam);
@@ -93,18 +103,44 @@ contract Treasury is Ownable {
         return playerAllowenceWithdraw[_address];
     }
 
-    function max(
-        uint32 a,
-        uint32 b,
-        uint32 c
-    ) public pure returns (uint32) {
-        uint32 maxVal = a;
-        if (b > maxVal) {
-            maxVal = b;
+    function setWinnerTeam() private view onlyOwner returns (uint8) {
+        uint256 team1 = getSizeArray(readMapping(1));
+        uint256 team2 = getSizeArray(readMapping(2));
+        uint256 team3 = getSizeArray(readMapping(3));
+        uint8 Winner = 1;
+        if (team2 > team1) {
+            Winner = 2;
         }
-        if (c > maxVal) {
-            maxVal = c;
+        if (team3 > team1) {
+            Winner = 3;
         }
-        return maxVal;
+        return Winner;
+    }
+
+    function resetTeam() private {
+        for (uint8 i = 1; i < 4; i++) {
+            delete teamMapping[i];
+        }
+    }
+
+    function deletePlayerPlayed() private {
+        delete playerPlayed;
+    }
+
+    function checkPlayerPlayed(address player) public view returns (bool) {
+        for (uint i = 0; i < playerPlayed.length; i++) {
+            if (playerPlayed[i] == player) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function playRound() public onlyOwner{
+        uint8 winner = setWinnerTeam();
+        addAllowanceWinners(winner);
+        resetTeam();
+        deletePlayerPlayed();
     }
 }
