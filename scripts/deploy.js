@@ -14,8 +14,8 @@ async function main() {
 
   await xenos.deployed();
 
-  await xenos.mint('0x70997970C51812dc3A010C7d01b50e0d17dc79C8',ethers.utils.parseEther('100'))
-  await xenos.mint('0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',ethers.utils.parseEther('100'))
+  // await xenos.mint('0x70997970C51812dc3A010C7d01b50e0d17dc79C8',ethers.utils.parseEther('100'))
+  // await xenos.mint('0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',ethers.utils.parseEther('100'))
 
 
   console.log(

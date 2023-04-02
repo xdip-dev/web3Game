@@ -5,6 +5,7 @@ const {
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const { parseEther } = require("ethers/lib/utils");
 
 
 describe("Token contract", function () {
@@ -197,6 +198,25 @@ describe("Token contract", function () {
       })
 
 
+    })
+
+    describe('Event', () =>{
+
+      it('should emit on deposit', async () => {
+        const { treasury,signers } = await loadFixture(deployTreasuryFixture)
+        
+        await expect(treasury.connect(signers[5]).depositTokens(ethers.utils.parseEther('1'), 1)).to.emit(treasury,'Deposit').withArgs(signers[5].address,ethers.utils.parseEther('1'))
+
+      })
+
+      it('should emit on withdraw',async () => {
+        const { treasury,signers } = await loadFixture(deployTreasuryFixture)
+
+        await treasury.playRound();
+        
+        await expect(treasury.connect(signers[0]).withdrawTokens()).to.emit(treasury,'Withdraw').withArgs(signers[0].address,ethers.BigNumber.from(ethers.utils.parseEther("5")).div(3))
+
+      })
     })
 
   })

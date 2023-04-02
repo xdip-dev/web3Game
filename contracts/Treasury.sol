@@ -16,8 +16,8 @@ contract Treasury is Ownable {
 
     mapping(address => uint256) private playerAllowenceWithdraw;
 
-    event Deposit(uint256 value);
-    event Withdraw(uint256 value);
+    event Deposit(address from,uint256 value);
+    event Withdraw(address from,uint256 value);
 
     constructor(address tokenAddress) {
         token = IERC20(tokenAddress); // initialize ERC20 token contract interface
@@ -44,7 +44,7 @@ contract Treasury is Ownable {
         assignTeamMember(teamNumber, msg.sender);
         playerPlayed.push(msg.sender);
 
-        emit Deposit(amount);
+        emit Deposit(msg.sender,amount);
     }
 
     function withdrawTokens() public {
@@ -57,6 +57,8 @@ contract Treasury is Ownable {
         playerAllowenceWithdraw[msg.sender] = 0;
 
         token.transfer(msg.sender, amountToTransfert);
+
+        emit Withdraw(msg.sender,amountToTransfert);
     }
 
     function assignTeamMember(uint8 teamNumber, address addressPlayer) private {
