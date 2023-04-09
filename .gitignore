@@ -6,6 +6,7 @@ coverage/
 .alchemyURL
 scanNetwork.json
 contract_deployed_mumbai
+.secret.json
 
 # Logs
 logs

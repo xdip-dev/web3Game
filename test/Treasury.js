@@ -98,8 +98,8 @@ describe("Token contract", function () {
       it('should gather all player bet into the balance pool', async function () {
 
         const { treasury, signers } = await loadFixture(deployTreasuryFixture)
-
-        expect(await treasury.getBalancePool()).to.be.equal(ethers.utils.parseEther('5'))
+  
+        expect(await treasury.balancePool()).to.be.equal(ethers.utils.parseEther('5'))
       })
 
       it('should play only once per game', async () => {
@@ -150,7 +150,7 @@ describe("Token contract", function () {
         expect(await treasury.getAllowanceWithdraw(signers[3].address)).to.be.equal(0)
         expect(await treasury.getAllowanceWithdraw(signers[4].address)).to.be.equal(0)
 
-        expect(await treasury.getBalancePool()).to.be.equal(0)
+        expect(await treasury.balancePool()).to.be.equal(0)
 
       })
 

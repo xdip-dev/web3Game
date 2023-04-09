@@ -8,7 +8,7 @@ import "hardhat/console.sol";
 contract Treasury is Ownable {
     IERC20 public token; // declare public variable for ERC20 token contract interface
 
-    uint256 private balancePool;
+    uint256 public balancePool;
 
     address[] public playerPlayed;
 
@@ -71,10 +71,6 @@ contract Treasury is Ownable {
         return teamMapping[teamNumber];
     }
 
-    function getBalancePool() public view returns (uint256) {
-        return balancePool;
-    }
-
     function getSizeArray(
         address[] memory addresses
     ) private pure returns (uint256) {
@@ -84,7 +80,7 @@ contract Treasury is Ownable {
     function calculateRewardsOfTheRound(
         uint8 winningTeam
     ) public view returns (uint256) {
-        return getBalancePool() / getSizeArray(readMapping(winningTeam));
+        return balancePool / getSizeArray(readMapping(winningTeam));
     }
 
     function addAllowanceWinners(uint8 winningTeam) private {
